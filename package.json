@@ -1,0 +1,42 @@
+{
+  "name": "lua-distiller",
+    "description": "Merge multiple lua file into one single lua file.",
+    "version": "0.1.0",
+    "homepage": "https://github.com/yi/node-lua-distiller",
+    "author": {
+      "name": "yi",
+      "email": "yi2004@gmail.com",
+      "url": "https://github.com/yi"
+    },
+    "bin": {
+      "lua-distill": "./bin/lua-distiller.coffee"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git://github.com/yi/node-lua-distiller.git"
+    },
+    "bugs": {
+      "url": "https://github.com/yi/node-lua-distiller/issues"
+    },
+    "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/yi/node-lua-distiller/blob/master/LICENSE"
+    }
+  ],
+    "main": "./bin/lua-distiller.coffee",
+    "engines": {
+      "node": ">= 0.8.0"
+    },
+    "dependencies": {
+      "commander": "latest",
+      "underscore": "latest",
+      "mkdirp": "latest",
+      "debug": "latest",
+      "uglify-js2": "latest",
+      "walk": "latest"
+    },
+    "devDependencies": {
+    },
+    "keywords": ["build","minify","lua","compiler" ]
+}
