@@ -33,7 +33,6 @@
       "underscore": "latest",
       "mkdirp": "latest",
       "debug": "latest",
-      "uglify-js2": "latest",
       "walk": "latest"
     },
     "devDependencies": {
