@@ -8,3 +8,4 @@ dist/
 moonfit
 quick-framework
 lua-gama
+*.merged.lua

@@ -22,8 +22,11 @@ EXTNAME = ".lua"
 
 COMMENT_MARK = "--"
 
-# {{{ AMD 模版
-AMD_TMPL = '''
+BASE_FILE_PATH = ""
+
+HR = "\n\n---------------------------------------\n\n\n"
+
+DISTILLER_HEAD = """
 __DEFINED = __DEFINED or {
   __get = function(id)
     assert(id, "__DEFINED.__get() failed. invalid id:"..tostring(id))
@@ -31,8 +34,8 @@ __DEFINED = __DEFINED or {
     return __DEFINED[id]
   end
 }
-'''
-# }}}
+#{HR}
+"""
 
 path = require "path"
 fs = require "fs"
@@ -42,127 +45,111 @@ _ = require "underscore"
 child_process = require 'child_process'
 debuglog = require('debug')('distill')
 
-DEFINE_HEAD = "\ndefine '%s', (require, exports, module) ->\n"
-
-EXEC_TAIL = "\nexec '%s'"
-
+# 正则表达式匹配出 lua 代码中的 require 部分
 RE_REQUIRE = /^.*require[\(\ ][\'"]([a-zA-Z0-9\.\_\/\-]+)[\'"]/mg
 
-RE_HEAD = /^/mg
-
-OUTPUT_JS_FILE = ""
-
-PATH_TO_UGLIFY = path.resolve(__dirname, "../node_modules/uglify-js2/bin/uglifyjs2")
+OUTPUT_FILE_PATH = ""
 
 MODULES = {}
 MODULE_ORDERS = []
 
+# 遇到错误时退出
 quitWithError = (msg)->
   console.error "ERROR: #{msg}"
   process.exit 1
 
+# 递归地从入口文件开始扫描所有依赖
 scan = (filename, requiredBy) ->
   # 扫描文件中所有 require() 方法
   requiredBy or= p.input
 
   debuglog "scan: #{filename}, required by:#{requiredBy}"
 
-  unless fs.existsSync(filename)
-    quitWithError "missing coffee file at #{filename}, required by:#{requiredBy}"
+  quitWithError "missing file at #{filename}, required by:#{requiredBy}" unless fs.existsSync(filename)
 
   code = fs.readFileSync filename, encoding : 'utf8'
-
-  MODULES[filename] =
-    id : filename
-    code : code
-    isMain : isMain
 
   requires = []
 
   processedCode = code.replace RE_REQUIRE, (line, packageName, indexFrom, whole)->
 
-    #debuglog "================================="
-    #console.dir arguments
-    #debuglog "[re] line:#{line}, packageName:#{packageName}"
-
     if packageName? and (!~line.indexOf(COMMENT_MARK) and line.indexOf(COMMENT_MARK) < line.indexOf('require'))
-      #debuglog "[ADD] %%%%%%%%%%%%%%%%%%%%%%% \n\n\n"
       requires.push packageName
       return line.replace("require", "__DEFINED.__get")
     else
       # 是被注释掉的 require
       return line
 
-  debuglog "%%%%%%%%%%%%%%%%%%%%%%%a"
-  debuglog processedCode
-  debuglog "%%%%%%%%%%%%%%%%%%%%%%%d"
-
   for module in requires
 
-    # ignore module require
-    continue if MODULES[module]
+    if MODULES[module]
+      # 忽略已经被摘取的模块, 但要提高这个依赖模块的排名
+      MODULE_ORDERS.unshift module
+      continue
 
-    filename = resolve(module)
+    pathToModuleFile = "#{module.replace(/\./g, '/')}.lua"
+    pathToModuleFile = path.normalize(path.join(BASE_FILE_PATH, pathToModuleFile))
 
     # run recesively
-    MODULES[module] = scan(module, filename)
+    MODULE_ORDERS.unshift module
+    MODULES[module] = scan(pathToModuleFile, filename)
 
   return processedCode
 
-# 将相对路径解析成决定路径
-resolve = (base, relative) ->
-  return path.normalize(path.join(path.dirname(base), relative)) + ".lua"
 
-# 合并成一个文件
-merge = ->
+# 将 lua 实现代码加套 (function() end)() 的外壳然后注册到 __DEFINED 上去
+distillify = (module)->"""
+__DEFINED["#{module}"] = (function()
+#{MODULES[module]}
+end)()
+"""
 
-  result = "#{AMD_TMPL}\n\n"
-
-  for id, module of MODULES
-    #console.dir module
-    id = id.replace('.coffee', '')
-    result  += DEFINE_HEAD.replace('%s', id)
-    result  += module.code.replace(RE_HEAD, '  ')
-    result  += " \n"
-
-  result  += EXEC_TAIL.replace('%s', p.input.replace('.coffee', ''))
-  fs.writeFileSync(OUTPUT_JS_FILE, result)
-
-
-
-
+##======= 以下为主体逻辑
 
 ## validate input parameters
-unless p.input?
-  quitWithError "missing main entrance coffee file (-i), use -h for help."
+quitWithError "missing main entrance coffee file (-i), use -h for help." unless p.input?
 
+# validate input path
 p.input = path.resolve process.cwd(), (p.input || '')
+quitWithError "bad main entrance file: #{p.input}, #{path.extname(p.input)}." unless fs.existsSync(p.input) and path.extname(p.input) is EXTNAME
+BASE_FILE_PATH = path.dirname p.input
 
-unless fs.existsSync(p.input) and path.extname(p.input) is EXTNAME
-  quitWithError "bad main entrance file: #{p.input}, #{path.extname(p.input)}."
-
+# figure out output path
 p.output = path.resolve(process.cwd(), p.output || '')
 
 if path.extname(p.output)
   outputBasename = path.basename(p.output, path.extname(p.output))
-  OUTPUT_JS_FILE = path.join path.dirname(p.output), "#{outputBasename}.lua"
+  OUTPUT_FILE_PATH = path.join path.dirname(p.output), "#{outputBasename}.merged.lua"
 else
-  outputBasename = path.basename(p.input, '.coffee')
-  OUTPUT_JS_FILE = path.join p.output, "#{outputBasename}.lua"
+  outputBasename = path.basename(p.input, '.lua')
+  OUTPUT_FILE_PATH = path.join p.output, "#{outputBasename}.merged.lua"
 
-mkdirp.sync(path.dirname(OUTPUT_JS_FILE))
+mkdirp.sync(path.dirname(OUTPUT_FILE_PATH))
 
 ## describe the job
-console.log "[lua-distiller] merge from #{path.relative(process.cwd(), p.input)} to #{path.relative(process.cwd(),OUTPUT_JS_FILE)}, minify via #{p.minify}"
+console.log "lua-distiller v#{pkg.version}"
+console.log "merge from #{path.relative(process.cwd(), p.input)} to #{path.relative(process.cwd(),OUTPUT_FILE_PATH)}"
 
 ## scan modules
-console.log "[lua-distiller] scanning..."
-scan(p.input)
+console.log "scanning..."
+mainBody = scan(p.input)
 
-debuglog "scan complete"
+console.log "scan complete, generate output to: #{OUTPUT_FILE_PATH}"
 
+result = ""
 
+# 加头
+result += DISTILLER_HEAD
 
-#console.log "[lua-distiller] merging #{_.keys(MODULES).length} coffee files..."
-#merge()
+# 把依赖打包进去
+result += _.uniq(MODULE_ORDERS).map(distillify).join(HR)
+
+# 换行
+result += HR
+
+# 加入口代码块
+result += mainBody
+
+# 输出
+fs.writeFileSync OUTPUT_FILE_PATH, result
 
