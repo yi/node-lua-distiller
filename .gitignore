@@ -9,3 +9,4 @@ moonfit
 quick-framework
 lua-gama
 *.merged.lua
+*.merged.luac
