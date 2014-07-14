@@ -20,11 +20,11 @@ lua-distill -i path/to/main.lua -o dist/dist.lua
 
 ## Command line options 命令行参数
 
-* -h, --help            output usage information
-* -V, --version         output the version number
-* -o, --output [VALUE]  output directory
-* -i, --input [VALUE]   path to main entrance coffee file
-
+* -h, --help                  output usage information
+* -V, --version               output the version number
+* -o, --output [VALUE]        output directory
+* -i, --input [VALUE]         path to main entrance coffee file
+* -x, --excludes [VALUE]      package names to be excluded, separated by: ","
 
 ## How it works 原理
 
@@ -52,7 +52,7 @@ lua 的 `require` 实现是通过调用 `package.preload` 和 `LOADED` table 来
 
 ## TODO:
 
- 1. 增加 lua 基本库的依赖忽略列表
+ 1. ~~增加 lua 基本库的依赖忽略列表~~
  2. 增加 luac 的命令行参数
 
 ## License

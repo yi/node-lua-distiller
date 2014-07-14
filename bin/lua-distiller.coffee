@@ -15,6 +15,7 @@ p.version(pkg.version)
   .option('-o, --output [VALUE]', 'output directory')
   .option('-n, --onlyKeepMinifiedFile', 'only keep minified file')
   .option('-i, --input [VALUE]', 'path to main entrance coffee file')
+  .option('-x, --excludes [VALUE]', 'package names to be excluded, separated by: ","')
   .option('-m, --minify [type]', 'minify merged javascript file. [closure] use Closure Compiler, [uglify] use uglify-js2, [none] do not minify', 'closure')
   .parse(process.argv)
 
@@ -36,6 +37,9 @@ __DEFINED = __DEFINED or {
 }
 #{HR}
 """
+
+# 要忽略包名
+EXCLUDE_PACKAGE_NAMES = "cjson zlib pack socket lfs lsqlite3".split(" ")
 
 path = require "path"
 fs = require "fs"
@@ -82,7 +86,7 @@ scan = (filename, requiredBy) ->
 
   for module in requires
 
-    if MODULES[module]
+    if MODULES[module] or ~EXCLUDE_PACKAGE_NAMES.indexOf(module)
       # 忽略已经被摘取的模块, 但要提高这个依赖模块的排名
       MODULE_ORDERS.unshift module
       continue
@@ -114,6 +118,9 @@ p.input = path.resolve process.cwd(), (p.input || '')
 quitWithError "bad main entrance file: #{p.input}, #{path.extname(p.input)}." unless fs.existsSync(p.input) and path.extname(p.input) is EXTNAME
 BASE_FILE_PATH = path.dirname p.input
 
+if p.excludes
+  EXCLUDE_PACKAGE_NAMES = EXCLUDE_PACKAGE_NAMES.concat(p.excludes.split(",").map((item)->item.trim()))
+
 # figure out output path
 p.output = path.resolve(process.cwd(), p.output || '')
 
@@ -129,6 +136,7 @@ mkdirp.sync(path.dirname(OUTPUT_FILE_PATH))
 ## describe the job
 console.log "lua-distiller v#{pkg.version}"
 console.log "merge from #{path.relative(process.cwd(), p.input)} to #{path.relative(process.cwd(),OUTPUT_FILE_PATH)}"
+console.log "ignore package: #{EXCLUDE_PACKAGE_NAMES}"
 
 ## scan modules
 console.log "scanning..."
