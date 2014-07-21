@@ -125,10 +125,11 @@ if p.excludes
 p.output = path.resolve(process.cwd(), p.output || '')
 
 if path.extname(p.output)
-  outputBasename = path.basename(p.output, path.extname(p.output))
-  OUTPUT_FILE_PATH = path.join path.dirname(p.output), "#{outputBasename}.merged.lua"
+  #outputBasename = path.basename(p.output, path.extname(p.output))
+  #OUTPUT_FILE_PATH = path.join path.dirname(p.output), "#{outputBasename}.merged.lua"
+  OUTPUT_FILE_PATH = path.resolve process.cwd(), p.output
 else
-  outputBasename = path.basename(p.input, '.lua')
+  outputBasename = path.basename(p.output ||  p.input, '.lua')
   OUTPUT_FILE_PATH = path.join p.output, "#{outputBasename}.merged.lua"
 
 mkdirp.sync(path.dirname(OUTPUT_FILE_PATH))
