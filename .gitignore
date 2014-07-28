@@ -11,3 +11,4 @@ lua-gama
 *.merged.lua
 *.merged.luac
 tags
+dump.rdb

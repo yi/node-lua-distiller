@@ -77,16 +77,22 @@ scan = (filename, requiredBy) ->
 
   processedCode = code.replace RE_REQUIRE, (line, packageName, indexFrom, whole)->
 
-    if packageName? and (!~line.indexOf(COMMENT_MARK) and line.indexOf(COMMENT_MARK) < line.indexOf('require'))
+    if packageName? and !~EXCLUDE_PACKAGE_NAMES.indexOf(packageName) and (!~line.indexOf(COMMENT_MARK) and line.indexOf(COMMENT_MARK) < line.indexOf('require'))
+      console.log "[lua-distiller::push push ] #{packageName}"
+
       requires.push packageName
       return line.replace("require", "__DEFINED.__get")
     else
+
+      console.log "[lua-distiller::ignore ~~~~] #{packageName}"
       # 是被注释掉的 require
       return line
 
   for module in requires
 
-    if MODULES[module] or ~EXCLUDE_PACKAGE_NAMES.indexOf(module)
+    #continue if ~EXCLUDE_PACKAGE_NAMES.indexOf(module)
+
+    if MODULES[module]
       # 忽略已经被摘取的模块, 但要提高这个依赖模块的排名
       MODULE_ORDERS.unshift module
       continue
