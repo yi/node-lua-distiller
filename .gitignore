@@ -12,3 +12,4 @@ lua-gama
 *.merged.luac
 tags
 dump.rdb
+log
