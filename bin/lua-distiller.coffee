@@ -10,6 +10,7 @@
 
 pkg = require "../package"
 p = require "commander"
+fs = require "fs"
 ## cli parameters
 p.version(pkg.version)
   .option('-o, --output [VALUE]', 'output directory')
@@ -28,21 +29,45 @@ BASE_FILE_PATH = ""
 HR = "\n\n---------------------------------------\n\n\n"
 
 DISTILLER_HEAD = """
-__DEFINED = __DEFINED or {
-  __get = function(id)
-    assert(id, "__DEFINED.__get() failed. invalid id:"..tostring(id))
-    assert(__DEFINED and __DEFINED[id], "__DEFINED.__get() failed. missing module:"..tostring(id))
-    return __DEFINED[id]
-  end
-}
+if __DISTILLER == nil then
+  __DISTILLER = nil
+  __DISTILLER = {
+    FACTORIES = { },
+    __nativeRequire = require,
+    require = function(id)
+      assert(type(id) == "string", "require invalid id:" .. tostring(id))
+      if package.loaded[id] then
+        return package.loaded[id]
+      end
+      if __DISTILLER.FACTORIES[id] then
+        local func = __DISTILLER.FACTORIES[id]
+        package.loaded[id] = func(__DISTILLER.require) or true
+        return package.loaded[id]
+      end
+      return __DISTILLER.__nativeRequire(id)
+    end,
+    define = function(self, id, factory)
+      assert(type(id) == "string", "invalid id:" .. tostring(id))
+      assert(type(factory) == "function", "invalid factory:" .. tostring(factory))
+      assert(package.loaded[id] == nil and self.FACTORIES[id] == nil, "module " .. tostring(id) .. " is already defined")
+      self.FACTORIES[id] = factory
+    end,
+    exec = function(self, id)
+      local func = self.FACTORIES[id]
+      assert(func, "missing factory method for id " .. tostring(id))
+      func(__DISTILLER.require)
+    end
+  }
+end
+
 #{HR}
 """
+
 
 # 要忽略包名
 EXCLUDE_PACKAGE_NAMES = "cjson zlib pack socket lfs lsqlite3 Cocos2d Cocos2dConstants".split(" ")
 
 path = require "path"
-fs = require "fs"
 mkdirp = require "mkdirp"
 _ = require "underscore"
 child_process = require 'child_process'
@@ -54,7 +79,6 @@ RE_REQUIRE = /^.*require[\(\ ][\'"]([a-zA-Z0-9\.\_\/\-]+)[\'"]/mg
 OUTPUT_FILE_PATH = ""
 
 MODULES = {}
-MODULE_ORDERS = []
 
 # 用于解决循环引用导致无限循环的问题
 VISITED_PATH = {}
@@ -87,7 +111,8 @@ scan = (filename, requiredBy) ->
       console.log "[lua-distiller] require #{packageName} in #{filename}"
       requires.push packageName
       VISITED_PATH["#{filename}->#{packageName}"] = true      # 添加到阅历中
-      return line.replace("require", "__DEFINED.__get")
+      #return line.replace("require", "__DEFINED.__get")
+      return line
     else
 
       console.log "[lua-distiller] ignore #{packageName} in #{filename}"
@@ -108,24 +133,11 @@ scan = (filename, requiredBy) ->
     pathToModuleFile = path.normalize(path.join(BASE_FILE_PATH, pathToModuleFile))
 
     # run recesively
-    #MODULE_ORDERS.unshift module
-    MODULE_ORDERS.push module
     MODULES[module] = scan(pathToModuleFile, filename)
-
-
-  console.log "[lua-distiller]  #{filename} MODULE_ORDERS:"
-  console.dir MODULE_ORDERS
-
 
   return processedCode
 
 
-# 将 lua 实现代码加套 (function() end)() 的外壳然后注册到 __DEFINED 上去
-distillify = (module)->"""
-__DEFINED["#{module}"] = (function()
-#{MODULES[module]}
-end)()
-"""
 
 ##======= 以下为主体逻辑
 
@@ -144,8 +156,6 @@ if p.excludes
 p.output = path.resolve(process.cwd(), p.output || '')
 
 if path.extname(p.output)
-  #outputBasename = path.basename(p.output, path.extname(p.output))
-  #OUTPUT_FILE_PATH = path.join path.dirname(p.output), "#{outputBasename}.merged.lua"
   OUTPUT_FILE_PATH = path.resolve process.cwd(), p.output
 else
   outputBasename = path.basename(p.output ||  p.input, '.lua')
@@ -160,7 +170,8 @@ console.log "ignore package: #{EXCLUDE_PACKAGE_NAMES}"
 
 ## scan modules
 console.log "scanning..."
-mainBody = scan(p.input)
+entranceName = path.basename(p.input, ".lua")
+MODULES[entranceName] = scan(p.input)
 
 console.log "scan complete, generate output to: #{OUTPUT_FILE_PATH}"
 
@@ -173,23 +184,21 @@ result += HR
 result += DISTILLER_HEAD
 
 # 把依赖打包进去
+for moduleId, content of MODULES
+  # 将 lua 实现代码加套 (function() end)() 的外壳然后注册到 __DEFINED 上去
+  result += """
+__DISTILLER:define("#{moduleId}", function(require)
+#{content}
+end)
 
-MODULE_ORDERS.reverse()
-
-console.log "ERROR [lua-distiller::before]"
-console.dir MODULE_ORDERS
-
-console.log "ERROR [lua-distiller::uniq]-----------"
-console.dir _.uniq MODULE_ORDERS
-
-
-result += _.uniq(MODULE_ORDERS).map(distillify).join(HR)
-
-# 换行
-result += HR
+#{HR}
+"""
 
 # 加入口代码块
-result += mainBody
+result += """
+__DISTILLER:exec("#{entranceName}")
+"""
+
 
 # 输出
 fs.writeFileSync OUTPUT_FILE_PATH, result

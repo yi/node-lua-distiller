@@ -19,7 +19,7 @@ if __DISTILLER == nil
 
       return __DISTILLER.__nativeRequire(id)
 
-    defin: (id, factory) =>
+    define: (id, factory) =>
       assert type(id) == "string", "invalid id:#{id}"
       assert type(factory) == "function", "invalid factory:#{factory}"
       assert package.loaded[id] == nil and @FACTORIES[id] == nil, "module #{id} is already defined"

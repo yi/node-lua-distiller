@@ -15,7 +15,7 @@ if __DISTILLER == nil then
       end
       return __DISTILLER.__nativeRequire(id)
     end,
-    defin = function(self, id, factory)
+    define = function(self, id, factory)
       assert(type(id) == "string", "invalid id:" .. tostring(id))
       assert(type(factory) == "function", "invalid factory:" .. tostring(factory))
       assert(package.loaded[id] == nil and self.FACTORIES[id] == nil, "module " .. tostring(id) .. " is already defined")
