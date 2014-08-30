@@ -88,6 +88,11 @@ quitWithError = (msg)->
   console.error "ERROR: #{msg}"
   process.exit 1
 
+
+#processRequireMatch =
+
+
+
 # 递归地从入口文件开始扫描所有依赖
 scan = (filename, requiredBy) ->
 
@@ -123,11 +128,8 @@ scan = (filename, requiredBy) ->
 
     #continue if ~EXCLUDE_PACKAGE_NAMES.indexOf(module)
 
-    if MODULES[module]
-      # 忽略已经被摘取的模块, 但要提高这个依赖模块的排名
-      #MODULE_ORDERS.unshift module
-      MODULE_ORDERS.push module
-      continue
+    # 忽略已经被摘取的模块, 但要提高这个依赖模块的排名
+    continue if MODULES[module]
 
     pathToModuleFile = "#{module.replace(/\./g, '/')}.lua"
     pathToModuleFile = path.normalize(path.join(BASE_FILE_PATH, pathToModuleFile))
@@ -138,11 +140,10 @@ scan = (filename, requiredBy) ->
   return processedCode
 
 
-
 ##======= 以下为主体逻辑
 
 ## validate input parameters
-quitWithError "missing main entrance coffee file (-i), use -h for help." unless p.input?
+quitWithError "missing main entrance lua file (-i), use -h for help." unless p.input?
 
 # validate input path
 p.input = path.resolve process.cwd(), (p.input || '')
@@ -172,6 +173,11 @@ console.log "ignore package: #{EXCLUDE_PACKAGE_NAMES}"
 console.log "scanning..."
 entranceName = path.basename(p.input, ".lua")
 MODULES[entranceName] = scan(p.input)
+
+
+console.log "following modules have been scanned"
+console.dir _.keys MODULES
+
 
 console.log "scan complete, generate output to: #{OUTPUT_FILE_PATH}"
 
