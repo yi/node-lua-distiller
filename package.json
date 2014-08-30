@@ -1,7 +1,7 @@
 {
   "name": "lua-distiller",
     "description": "Merge multiple lua file into one single lua file.",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "homepage": "https://github.com/yi/node-lua-distiller",
     "author": {
       "name": "yi",
@@ -11,6 +11,7 @@
     "bin": {
       "lua-distill": "./bin/lua-distiller.coffee"
     },
+    "scripts":{"preinstall": "git submodule update -i -r"},
     "repository": {
       "type": "git",
       "url": "git://github.com/yi/node-lua-distiller.git"
@@ -31,9 +32,8 @@
     "dependencies": {
       "commander": "latest",
       "underscore": "latest",
-      "mkdirp": "latest",
-      "debug": "latest",
-      "walk": "latest"
+      "shelljs": "latest",
+      "debug": "latest"
     },
     "devDependencies": {
     },

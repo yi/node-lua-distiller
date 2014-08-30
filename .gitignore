@@ -13,3 +13,6 @@ lua-gama
 tags
 dump.rdb
 log
+node-lua-distiller.merged.luajit
+node-lua-distiller.min.lua
+node-lua-distiller.min.luajit
