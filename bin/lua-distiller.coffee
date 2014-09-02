@@ -182,7 +182,9 @@ console.log "ignore package: #{EXCLUDE_PACKAGE_NAMES}"
 
 ## scan modules
 console.log "scanning..."
-entranceName = path.basename(p.input, ".lua")
+#entranceName = path.basename(p.input, ".lua")
+# NOTE: entranceName 使用随机内容，以避免在模块被再次引用的时候，由于包名在 require 时创建临时申明而产生冲突
+entranceName = "#{path.basename(p.input)}_distilled"
 MODULES[entranceName] = scan(p.input)
 
 
