@@ -1,7 +1,7 @@
 {
   "name": "lua-distiller",
     "description": "Merge multiple lua file into one single lua file.",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "homepage": "https://github.com/yi/node-lua-distiller",
     "author": {
       "name": "yi",

@@ -22,8 +22,10 @@ if __DISTILLER == nil
     define: (id, factory) =>
       assert type(id) == "string", "invalid id:#{id}"
       assert type(factory) == "function", "invalid factory:#{factory}"
-      assert package.loaded[id] == nil and @FACTORIES[id] == nil, "module #{id} is already defined"
-      @FACTORIES[id] = factory
+      if package.loaded[id] == nil and @FACTORIES[id] == nil
+        @FACTORIES[id] = factory
+      else
+        print "[__DISTILLER::define] module #{id} is already defined"
       return
 
     exec: (id)=>

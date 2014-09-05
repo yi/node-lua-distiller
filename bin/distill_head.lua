@@ -18,8 +18,11 @@ if __DISTILLER == nil then
     define = function(self, id, factory)
       assert(type(id) == "string", "invalid id:" .. tostring(id))
       assert(type(factory) == "function", "invalid factory:" .. tostring(factory))
-      assert(package.loaded[id] == nil and self.FACTORIES[id] == nil, "module " .. tostring(id) .. " is already defined")
-      self.FACTORIES[id] = factory
+      if package.loaded[id] == nil and self.FACTORIES[id] == nil then
+        self.FACTORIES[id] = factory
+      else
+        print("[__DISTILLER::define] module " .. tostring(id) .. " is already defined")
+      end
     end,
     exec = function(self, id)
       local func = self.FACTORIES[id]
