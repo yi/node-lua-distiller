@@ -27,7 +27,7 @@ lua-distill -i path/to/main.lua -o dist/dist.lua
   -V, --version               output the version number
   -o, --output [VALUE]        output directory
   -n, --onlyKeepMinifiedFile  only keep minified file
-  -i, --input [VALUE]         path to main entrance coffee file
+  -i, --input [VALUE]         path to main entrance lua file
   -x, --excludes [VALUE]      package names to be excluded, separated by: ","
   -m, --minify                minify merged lua file by LuaSrcDiet
   -j, --luajitify             compile merged lua file into luajit binary
@@ -56,7 +56,7 @@ lua 的 `require` 实现是通过调用 `package.preload` 来确保一个模块�
  1. 自动分析lua代码，无需手工维护合并列表
  2. 忽略被注释掉的 `require`
  3. 自动忽略项目中没有被用到的 lua 代码
- 4. 可以嵌套地合并，比如一个项目中使用到n给第三方代码库，这些代码库都通过 distiller 合并过的话，将他们合并在一起不会产生冲突，是兼容的。
+ 4. 可以嵌套地合并，比如一个项目中使用到n个第三方代码库，这些代码库都通过 distiller 合并过的话，将他们合并在一起不会产生冲突，是兼容的。
 
 ### 缺点
  1. 无法识别运行时程序拼合的模块名，比如 quick-x 中的 `require(cc.PACKAGE_NAME .. ".functions")` 是无法被识别的。并且我个人认为运行时拼合模块名是一种风险相对较大的实现，不推荐这样做。
