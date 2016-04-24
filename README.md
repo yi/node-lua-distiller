@@ -12,6 +12,11 @@
 npm install coffee-script lua-distiller -g
 ```
 
+[LuaSrcDiet][] 是可选依赖。如果如果需要 minify 功能，
+请确保 `LuaSrcDiet.lua` 在 `$PATH` 中。
+
+[LuaSrcDiet]: https://github.com/LuaDist/luasrcdiet/tree/486129fa1ef1539071d14a366d686f3892c3d43f
+
 ## Usage 用法
 
 Use in command line
