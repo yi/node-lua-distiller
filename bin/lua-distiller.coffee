@@ -13,7 +13,7 @@ p = require "commander"
 ## cli parameters
 p.version(pkg.version)
   .option('-o, --output [VALUE]', 'output directory')
-  .option('-i, --input [VALUE]', 'path to main entrance coffee file')
+  .option('-i, --input [VALUE]', 'path to main entrance lua file')
   .option('-x, --excludes [VALUE]', 'package names to be excluded, separated by: ","')
   .option('-m, --minify', 'minify merged lua file by LuaSrcDiet')
   .option('-j, --luajitify', 'compile merged lua file into luajit binary')
