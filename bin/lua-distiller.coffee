@@ -86,8 +86,6 @@ OUTPUT_PATH_MINIFIED_LUA = ""
 OUTPUT_PATH_MERGED_JIT = ""
 OUTPUT_PATH_MINIFIED_JIT = ""
 
-PATH_TO_LUA_SRC_DIET = path.resolve(__dirname, "../luasrcdiet/")
-#console.log "[lua-distiller::PATH_TO_LUA_SRC_DIET] #{PATH_TO_LUA_SRC_DIET}"
 
 PATH_TO_LUA_JIT = which "luajit"
 #console.log "[lua-distiller::PATH_TO_LUA_JIT] #{PATH_TO_LUA_JIT}"
@@ -227,7 +225,7 @@ fs.writeFileSync OUTPUT_PATH_MERGED_LUA, result
 
 if p.minify
   console.log "minify merged lua file to: #{OUTPUT_PATH_MINIFIED_LUA}"
-  exec "cd #{PATH_TO_LUA_SRC_DIET} && ./LuaSrcDiet.lua #{OUTPUT_PATH_MERGED_LUA} -o #{OUTPUT_PATH_MINIFIED_LUA} "
+  exec "LuaSrcDiet.lua #{OUTPUT_PATH_MERGED_LUA} -o #{OUTPUT_PATH_MINIFIED_LUA} "
 
 if p.luajitify
   console.log "luajit compile merged lua file to #{OUTPUT_PATH_MERGED_JIT}"
