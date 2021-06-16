@@ -137,10 +137,11 @@ scan = (filename, requiredBy) ->
 
     #continue if ~EXCLUDE_PACKAGE_NAMES.indexOf(module)
 
+    module = "#{module.replace(/\./g, '/')}"
     # 忽略已经被摘取的模块, 但要提高这个依赖模块的排名
     continue if MODULES[module]
 
-    pathToModuleFile = "#{module.replace(/\./g, '/')}.lua"
+    pathToModuleFile = module + ".lua"
     pathToModuleFile = path.normalize(path.join(BASE_FILE_PATH, pathToModuleFile))
 
     # run recesively
