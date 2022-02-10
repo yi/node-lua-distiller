@@ -78,7 +78,7 @@ child_process = require 'child_process'
 debuglog = require('debug')('distill')
 
 # 正则表达式匹配出 lua 代码中的 require 部分
-RE_REQUIRE = /^.*require[\(\ ][\'"]([a-zA-Z0-9\.\_\/\-]+)[\'"]/mg
+RE_REQUIRE = /^.*require *[\(\ ] *[\'"]([a-zA-Z0-9\.\_\/\-]+)[\'"]/mg
 
 OUTPUT_PATH_MERGED_LUA = ""
 OUTPUT_PATH_MINIFIED_LUA = ""
